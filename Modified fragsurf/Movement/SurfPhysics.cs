@@ -1,8 +1,9 @@
 ﻿using UnityEngine;
 using Fragsurf.TraceUtil;
+using UdonSharp;
 
 namespace Fragsurf.Movement {
-    public class SurfPhysics {
+    public class SurfPhysics : UdonSharpBehaviour {
         ///// Fields /////
 
         /// <summary>

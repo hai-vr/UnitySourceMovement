@@ -1,18 +1,17 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 namespace Fragsurf.Movement {
+
+    public enum ColliderType {
+        Capsule,
+        Box
+    }
 
     /// <summary>
     /// Easily add a surfable character to the scene
     /// </summary>
     [AddComponentMenu ("Fragsurf/Surf Character")]
-    public class SurfCharacter : MonoBehaviour, ISurfControllable {
-
-        public enum ColliderType {
-            Capsule,
-            Box
-        }
+    public class SurfCharacter : ISurfControllable {
 
         ///// Fields /////
 
@@ -61,7 +60,8 @@ namespace Fragsurf.Movement {
 
         private Rigidbody rb;
 
-        private List<Collider> triggers = new List<Collider> ();
+        private Collider[] triggers = new Collider[128];
+        private int triggersActualLength;
         private int numberOfTriggers = 0;
 
         private bool underwater = false;
@@ -228,11 +228,11 @@ namespace Fragsurf.Movement {
             moveData.origin += positionalMovement;
 
             // Triggers
-            if (numberOfTriggers != triggers.Count) {
-                numberOfTriggers = triggers.Count;
+            if (numberOfTriggers != triggers.Length) {
+                numberOfTriggers = triggers.Length;
 
                 underwater = false;
-                triggers.RemoveAll (item => item == null);
+                ShimTriggersRemoveAllNulls();
                 foreach (Collider trigger in triggers) {
 
                     if (trigger == null)
@@ -334,17 +334,92 @@ namespace Fragsurf.Movement {
         }
 
         private void OnTriggerEnter (Collider other) {
-            
-            if (!triggers.Contains (other))
-                triggers.Add (other);
+
+            if (!ShimTriggersContains (other))
+                ShimTriggersAdd (other);
 
         }
 
         private void OnTriggerExit (Collider other) {
             
-            if (triggers.Contains (other))
-                triggers.Remove (other);
+            if (ShimTriggersContains (other))
+                ShimTriggersRemove (other);
 
+        }
+
+        private bool ShimTriggersContains(Collider other)
+        {
+            // Naive implementation
+            for (var index = 0; index < triggersActualLength; index++)
+            {
+                var trigger = triggers[index];
+                if (trigger == other) return true;
+            }
+
+            return false;
+        }
+
+        private void ShimTriggersAdd(Collider other)
+        {
+            // Naive implementation
+            if (triggers.Length > triggersActualLength)
+            {
+                triggers[triggersActualLength] = other;
+                triggersActualLength++;
+            }
+        }
+
+        private void ShimTriggersRemove(Collider other)
+        {
+            // Naive implementation
+            for (var index = 0; index < triggersActualLength; index++)
+            {
+                var trigger = triggers[index];
+                if (trigger == other)
+                {
+                    triggers[index] = triggers[triggersActualLength - 1];
+                    triggersActualLength--;
+                }
+            }
+        }
+
+        private void ShimTriggersRemoveAll(Collider other)
+        {
+            // Naive implementation
+            var index = 0;
+            while (index < triggersActualLength)
+            {
+                var trigger = triggers[index];
+                if (trigger == other)
+                {
+                    triggers[index] = triggers[triggersActualLength - 1];
+                    triggersActualLength--;
+                }
+                else
+                {
+                    index++;
+                }
+            }
+        }
+
+        // This is a shim, I have not analyzed what the caller of this function does.
+        private void ShimTriggersRemoveAllNulls()
+        {
+            // Naive implementation
+            var index = 0;
+            while (index < triggersActualLength)
+            {
+                var trigger = triggers[index];
+                if (trigger == null)
+                {
+                    triggers[index] = triggers[triggersActualLength - 1];
+                    triggersActualLength--;
+                }
+                else
+                {
+                    index++;
+                }
+            }
         }
 
         private void OnCollisionStay (Collision collision) {

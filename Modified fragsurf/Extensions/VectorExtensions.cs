@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
-public static class VectorExtensions {
+public class VectorExtensions : UdonSharpBehaviour {
 
     public static Vector3 VectorMa (Vector3 start, float scale, Vector3 direction) {
 

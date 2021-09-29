@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
-public class Trace
+public class Trace : UdonSharpBehaviour
 {
     public Vector3 startPos;
     public Vector3 endPos;

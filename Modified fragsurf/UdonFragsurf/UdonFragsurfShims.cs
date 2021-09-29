@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
 namespace UdonFragsurf
 {
-    public class UdonFragsurfShims
+    public class UdonFragsurfShims : UdonSharpBehaviour
     {
         public static int Shim_NotImplementedException(string reason)
         {

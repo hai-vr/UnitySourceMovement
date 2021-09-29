@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 namespace Fragsurf.Movement {
 
     [System.Serializable]
-    public class MovementConfig {
+    public class MovementConfig : UdonSharpBehaviour {
 
         [Header ("Jumping and gravity")]
         public bool autoBhop = true;

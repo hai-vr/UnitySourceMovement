@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
 namespace Fragsurf.Movement {
 
@@ -9,7 +10,7 @@ namespace Fragsurf.Movement {
         Ladder, // not implemented
     }
 
-    public class MoveData {
+    public class MoveData : UdonSharpBehaviour {
 
         ///// Fields /////
         

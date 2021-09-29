@@ -1,17 +1,18 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
 namespace Fragsurf.Movement {
 
-    public interface ISurfControllable {
+    public class ISurfControllable : UdonSharpBehaviour {
 
-        MoveType moveType { get; }
-        MoveData moveData { get; }
-        Collider collider { get; }
-        GameObject groundObject { get; set; }
-        Vector3 forward { get; }
-        Vector3 right { get; }
-        Vector3 up { get; }
-        Vector3 baseVelocity { get; }
+        public MoveType moveType { get; }
+        public MoveData moveData { get; }
+        public Collider collider { get; }
+        public GameObject groundObject { get; set; }
+        public Vector3 forward { get; }
+        public Vector3 right { get; }
+        public Vector3 up { get; }
+        public Vector3 baseVelocity { get; }
 
     }
 }

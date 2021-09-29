@@ -1,8 +1,9 @@
 using UnityEngine;
 using Fragsurf.TraceUtil;
+using UdonSharp;
 
 namespace Fragsurf.Movement {
-    public class SurfController {
+    public class SurfController : UdonSharpBehaviour {
         // Udon Specific
         private Trace traceHolder;
 

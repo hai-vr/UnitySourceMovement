@@ -1,9 +1,9 @@
-﻿using Fragsurf;
-using UdonFragsurf;
+﻿using UdonFragsurf;
+using UdonSharp;
 using UnityEngine;
 
 namespace Fragsurf.TraceUtil {
-    public class Tracer {
+    public class Tracer : UdonSharpBehaviour {
 
         /// <summary>
         /// 

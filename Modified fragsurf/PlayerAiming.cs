@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using UdonSharp;
+using UnityEngine;
 
-public class PlayerAiming : MonoBehaviour
+public class PlayerAiming : UdonSharpBehaviour
 {
 	[Header("References")]
 	public Transform bodyTransform;
