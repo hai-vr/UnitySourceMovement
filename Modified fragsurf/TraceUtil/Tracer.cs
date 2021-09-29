@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Fragsurf;
+using UdonFragsurf;
+using UnityEngine;
 
 namespace Fragsurf.TraceUtil {
     public class Tracer {
@@ -11,12 +13,12 @@ namespace Fragsurf.TraceUtil {
         /// <param name="end"></param>
         /// <param name="layerMask"></param>
         /// <returns></returns>
-        public static Trace TraceCollider (Collider collider, Vector3 origin, Vector3 end, int layerMask, float colliderScale = 1f) {
+        public static Trace TraceCollider (Trace trace, Collider collider, Vector3 origin, Vector3 end, int layerMask, float colliderScale = 1f) {
 
             if (collider is BoxCollider) {
 
                 // Box collider trace
-                return TraceBox (origin, end, collider.bounds.extents, collider.contactOffset, layerMask, colliderScale);
+                return TraceBox (trace, origin, end, collider.bounds.extents, collider.contactOffset, layerMask, colliderScale);
 
             } else if (collider is CapsuleCollider) {
 
@@ -26,24 +28,23 @@ namespace Fragsurf.TraceUtil {
                 Vector3 point1, point2;
                 Movement.SurfPhysics.GetCapsulePoints (capc, origin, out point1, out point2);
 
-                return TraceCapsule (point1, point2, capc.radius, origin, end, capc.contactOffset, layerMask, colliderScale);
+                return TraceCapsule (trace, point1, point2, capc.radius, origin, end, capc.contactOffset, layerMask, colliderScale);
 
             }
 
-            throw new System.NotImplementedException ("Trace missing for collider: " + collider.GetType ());
-
+            UdonFragsurfShims.Shim_NotImplementedException("Trace missing for collider: " + collider.GetType ());
+            return null;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public static Trace TraceCapsule (Vector3 point1, Vector3 point2, float radius, Vector3 start, Vector3 destination, float contactOffset, int layerMask, float colliderScale = 1f) {
+        public static Trace TraceCapsule (Trace result, Vector3 point1, Vector3 point2, float radius, Vector3 start, Vector3 destination, float contactOffset, int layerMask, float colliderScale = 1f) {
 
-            var result = new Trace () {
-                startPos = start,
-                endPos = destination
-            };
+            result._Pristine();
+            result.startPos = start;
+            result.endPos = destination;
 
             var longSide = Mathf.Sqrt (contactOffset * contactOffset + contactOffset * contactOffset);
             radius *= (1f - contactOffset);
@@ -86,12 +87,11 @@ namespace Fragsurf.TraceUtil {
         /// 
         /// </summary>
         /// <returns></returns>
-        public static Trace TraceBox (Vector3 start, Vector3 destination, Vector3 extents, float contactOffset, int layerMask, float colliderScale = 1f) {
-
-            var result = new Trace () {
-                startPos = start,
-                endPos = destination
-            };
+        public static Trace TraceBox (Trace result, Vector3 start, Vector3 destination, Vector3 extents, float contactOffset, int layerMask, float colliderScale = 1f)
+        {
+            result._Pristine();
+            result.startPos = start;
+            result.endPos = destination;
 
             var longSide = Mathf.Sqrt (contactOffset * contactOffset + contactOffset * contactOffset);
             var direction = (destination - start).normalized;

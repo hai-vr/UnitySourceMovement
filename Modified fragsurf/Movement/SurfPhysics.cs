@@ -3,7 +3,6 @@ using Fragsurf.TraceUtil;
 
 namespace Fragsurf.Movement {
     public class SurfPhysics {
-
         ///// Fields /////
 
         /// <summary>
@@ -30,7 +29,7 @@ namespace Fragsurf.Movement {
         /// <param name="velocity"></param>
         /// http://www.00jknight.com/blog/unity-character-controller
         
-        public static void ResolveCollisions (Collider collider, ref Vector3 origin, ref Vector3 velocity, float rigidbodyPushForce, float velocityMultiplier = 1f, float stepOffset = 0f, ISurfControllable surfer = null) {
+        public static void ResolveCollisions (Trace traceHolder, Collider collider, ref Vector3 origin, ref Vector3 velocity, float rigidbodyPushForce, float velocityMultiplier = 1f, float stepOffset = 0f, ISurfControllable surfer = null) {
 
             // manual collision resolving
             int numOverlaps = 0;
@@ -63,7 +62,7 @@ namespace Fragsurf.Movement {
                     
                     // Step offset
                     if (stepOffset > 0f && surfer != null && surfer.moveData.useStepOffset)
-                        if (StepOffset (collider, _colliders [i], ref origin, ref velocity, rigidbodyPushForce, velocityMultiplier, stepOffset, direction, distance, forwardVelocity, surfer))
+                        if (StepOffset (traceHolder, collider, _colliders [i], ref origin, ref velocity, rigidbodyPushForce, velocityMultiplier, stepOffset, direction, distance, forwardVelocity, surfer))
                             return;
 
                     // Handle collision
@@ -84,7 +83,7 @@ namespace Fragsurf.Movement {
 
         }
 
-        public static bool StepOffset (Collider collider, Collider otherCollider, ref Vector3 origin, ref Vector3 velocity, float rigidbodyPushForce, float velocityMultiplier, float stepOffset, Vector3 direction, float distance, Vector3 forwardVelocity, ISurfControllable surfer) {
+        public static bool StepOffset (Trace traceHolder, Collider collider, Collider otherCollider, ref Vector3 origin, ref Vector3 velocity, float rigidbodyPushForce, float velocityMultiplier, float stepOffset, Vector3 direction, float distance, Vector3 forwardVelocity, ISurfControllable surfer) {
 
             // Return if step offset is 0
             if (stepOffset <= 0f)
@@ -96,18 +95,18 @@ namespace Fragsurf.Movement {
                 return false;
 
             // Trace ground
-            Trace groundTrace = Tracer.TraceCollider (collider, origin, origin + Vector3.down * 0.1f, groundLayerMask);
+            Trace groundTrace = Tracer.TraceCollider (traceHolder, collider, origin, origin + Vector3.down * 0.1f, groundLayerMask);
             if (groundTrace.hitCollider == null || Vector3.Angle (Vector3.up, groundTrace.planeNormal) > surfer.moveData.slopeLimit)
                 return false;
 
             // Trace wall
-            Trace wallTrace = Tracer.TraceCollider (collider, origin, origin + velocity, groundLayerMask, 0.9f);
+            Trace wallTrace = Tracer.TraceCollider (traceHolder, collider, origin, origin + velocity, groundLayerMask, 0.9f);
             if (wallTrace.hitCollider == null || Vector3.Angle (Vector3.up, wallTrace.planeNormal) <= surfer.moveData.slopeLimit)
                 return false;
 
             // Trace upwards (check for roof etc)
             float upDistance = stepOffset;
-            Trace upTrace = Tracer.TraceCollider (collider, origin, origin + Vector3.up * stepOffset, groundLayerMask);
+            Trace upTrace = Tracer.TraceCollider (traceHolder, collider, origin, origin + Vector3.up * stepOffset, groundLayerMask);
             if (upTrace.hitCollider != null)
                 upDistance = upTrace.distance;
 
@@ -120,7 +119,7 @@ namespace Fragsurf.Movement {
             // Trace forwards (check for walls etc)
             float forwardMagnitude = stepOffset;
             float forwardDistance = forwardMagnitude;
-            Trace forwardTrace = Tracer.TraceCollider (collider, upOrigin, upOrigin + forwardDirection * Mathf.Max (0.2f, forwardMagnitude), groundLayerMask);
+            Trace forwardTrace = Tracer.TraceCollider (traceHolder, collider, upOrigin, upOrigin + forwardDirection * Mathf.Max (0.2f, forwardMagnitude), groundLayerMask);
             if (forwardTrace.hitCollider != null)
                 forwardDistance = forwardTrace.distance;
             
@@ -132,7 +131,7 @@ namespace Fragsurf.Movement {
 
             // Trace down (find ground)
             float downDistance = upDistance;
-            Trace downTrace = Tracer.TraceCollider (collider, upForwardOrigin, upForwardOrigin + Vector3.down * upDistance, groundLayerMask);
+            Trace downTrace = Tracer.TraceCollider (traceHolder, collider, upForwardOrigin, upForwardOrigin + Vector3.down * upDistance, groundLayerMask);
             if (downTrace.hitCollider != null)
                 downDistance = downTrace.distance;
 
@@ -209,7 +208,7 @@ namespace Fragsurf.Movement {
         /// <param name="firstDestination"></param>
         /// <param name="firstTrace"></param>
         /// <returns></returns>
-        public static int Reflect (ref Vector3 velocity, Collider collider, Vector3 origin, float deltaTime) {
+        public static int Reflect (Trace traceHolder, ref Vector3 velocity, Collider collider, Vector3 origin, float deltaTime) {
 
             float d;
             var newVelocity = Vector3.zero;
@@ -229,7 +228,7 @@ namespace Fragsurf.Movement {
                 // Assume we can move all the way from the current origin to the
                 //  end point.
                 var end = VectorExtensions.VectorMa (origin, timeLeft, velocity);
-                var trace = Tracer.TraceCollider (collider, origin, end, groundLayerMask);
+                var trace = Tracer.TraceCollider (traceHolder, collider, origin, end, groundLayerMask);
 
                 allFraction += trace.fraction;
 

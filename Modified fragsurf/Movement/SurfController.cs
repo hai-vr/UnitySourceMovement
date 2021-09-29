@@ -3,6 +3,8 @@ using Fragsurf.TraceUtil;
 
 namespace Fragsurf.Movement {
     public class SurfController {
+        // Udon Specific
+        private Trace traceHolder;
 
         ///// Fields /////
 
@@ -88,7 +90,7 @@ namespace Fragsurf.Movement {
             if (_surfer.moveData.velocity.sqrMagnitude == 0f) {
 
                 // Do collisions while standing still
-                SurfPhysics.ResolveCollisions (_surfer.collider, ref _surfer.moveData.origin, ref _surfer.moveData.velocity, _surfer.moveData.rigidbodyPushForce, 1f, _surfer.moveData.stepOffset, _surfer);
+                SurfPhysics.ResolveCollisions (traceHolder, _surfer.collider, ref _surfer.moveData.origin, ref _surfer.moveData.velocity, _surfer.moveData.rigidbodyPushForce, 1f, _surfer.moveData.stepOffset, _surfer);
 
             } else {
 
@@ -106,7 +108,7 @@ namespace Fragsurf.Movement {
                     _surfer.moveData.origin += velThisLoop;
 
                     // don't penetrate walls
-                    SurfPhysics.ResolveCollisions (_surfer.collider, ref _surfer.moveData.origin, ref _surfer.moveData.velocity, _surfer.moveData.rigidbodyPushForce, amountThisLoop / initialVel, _surfer.moveData.stepOffset, _surfer);
+                    SurfPhysics.ResolveCollisions (traceHolder, _surfer.collider, ref _surfer.moveData.origin, ref _surfer.moveData.velocity, _surfer.moveData.rigidbodyPushForce, amountThisLoop / initialVel, _surfer.moveData.stepOffset, _surfer);
 
                 }
 
@@ -138,7 +140,7 @@ namespace Fragsurf.Movement {
                     _surfer.moveData.velocity += AirInputMovement ();
 
                     // let the magic happen
-                    SurfPhysics.Reflect (ref _surfer.moveData.velocity, _surfer.collider, _surfer.moveData.origin, _deltaTime);
+                    SurfPhysics.Reflect (traceHolder, ref _surfer.moveData.velocity, _surfer.collider, _surfer.moveData.origin, _deltaTime);
 
                 } else {
 
@@ -584,7 +586,7 @@ namespace Fragsurf.Movement {
         /// <returns></returns>
         private Trace TraceBounds (Vector3 start, Vector3 end, int layerMask) {
 
-            return Tracer.TraceCollider (_surfer.collider, start, end, layerMask);
+            return Tracer.TraceCollider (traceHolder, _surfer.collider, start, end, layerMask);
 
         }
 
@@ -597,7 +599,7 @@ namespace Fragsurf.Movement {
             var down = _surfer.moveData.origin;
             down.y -= 0.15f;
 
-            return Tracer.TraceCollider (_surfer.collider, _surfer.moveData.origin, down, SurfPhysics.groundLayerMask);
+            return Tracer.TraceCollider (traceHolder, _surfer.collider, _surfer.moveData.origin, down, SurfPhysics.groundLayerMask);
 
         }
 
@@ -674,7 +676,7 @@ namespace Fragsurf.Movement {
                     Vector3 startPos = boxCollider.transform.position;
                     Vector3 endPos = boxCollider.transform.position + (uncrouchDown ? Vector3.down : Vector3.up) * heightDifference;
 
-                    Trace trace = Tracer.TraceBox (startPos, endPos, halfExtents, boxCollider.contactOffset, SurfPhysics.groundLayerMask);
+                    Trace trace = Tracer.TraceBox (traceHolder, startPos, endPos, halfExtents, boxCollider.contactOffset, SurfPhysics.groundLayerMask);
 
                     if (trace.hitCollider != null)
                         canUncrouch = false;
@@ -688,7 +690,7 @@ namespace Fragsurf.Movement {
                     Vector3 startPos = capsuleCollider.transform.position;
                     Vector3 endPos = capsuleCollider.transform.position + (uncrouchDown ? Vector3.down : Vector3.up) * heightDifference;
 
-                    Trace trace = Tracer.TraceCapsule (point1, point2, capsuleCollider.radius, startPos, endPos, capsuleCollider.contactOffset, SurfPhysics.groundLayerMask);
+                    Trace trace = Tracer.TraceCapsule (traceHolder, point1, point2, capsuleCollider.radius, startPos, endPos, capsuleCollider.contactOffset, SurfPhysics.groundLayerMask);
 
                     if (trace.hitCollider != null)
                         canUncrouch = false;
