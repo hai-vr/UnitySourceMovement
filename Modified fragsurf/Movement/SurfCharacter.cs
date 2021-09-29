@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using VRC.Udon;
 
 namespace Fragsurf.Movement {
 
@@ -12,6 +13,11 @@ namespace Fragsurf.Movement {
     /// </summary>
     [AddComponentMenu ("Fragsurf/Surf Character")]
     public class SurfCharacter : ISurfControllable {
+        // Udon Specific
+        public GameObject emptyGameObject;
+
+        public MoveData _moveData; // = new MoveData ();
+        public SurfController _controller; // = new SurfController ();
 
         ///// Fields /////
 
@@ -55,9 +61,6 @@ namespace Fragsurf.Movement {
         private GameObject _cameraWaterCheckObject;
         private CameraWaterCheck _cameraWaterCheck;
 
-        private MoveData _moveData = new MoveData ();
-        private SurfController _controller = new SurfController ();
-
         private Rigidbody rb;
 
         private Collider[] triggers = new Collider[128];
@@ -65,6 +68,18 @@ namespace Fragsurf.Movement {
         private int numberOfTriggers = 0;
 
         private bool underwater = false;
+
+        // UdonSharp Property Shims
+
+        public override MoveType XGet_moveType() { return moveType; }
+        public override MoveData XGet_moveData() { return moveData; }
+        public override Collider XGet_collider() { return collider; }
+        public override GameObject XGet_groundObject() { return groundObject; }
+        public override void XSet_groundObject(GameObject value) { groundObject = value; }
+        public override Vector3 XGet_forward() { return forward; }
+        public override Vector3 XGet_right() { return right; }
+        public override Vector3 XGet_up() { return up; }
+        public override Vector3 XGet_baseVelocity() { return baseVelocity; }
 
         ///// Properties /////
 
@@ -110,8 +125,8 @@ namespace Fragsurf.Movement {
         }
 
         private void Start () {
-            
-            _colliderObject = new GameObject ("PlayerCollider");
+
+            _colliderObject = NewGameObject ("PlayerCollider");
             _colliderObject.layer = gameObject.layer;
             _colliderObject.transform.SetParent (transform);
             _colliderObject.transform.rotation = Quaternion.identity;
@@ -119,24 +134,25 @@ namespace Fragsurf.Movement {
             _colliderObject.transform.SetSiblingIndex (0);
 
             // Water check
-            _cameraWaterCheckObject = new GameObject ("Camera water check");
+            _cameraWaterCheckObject = NewGameObject ("Camera water check");
             _cameraWaterCheckObject.layer = gameObject.layer;
             _cameraWaterCheckObject.transform.position = viewTransform.position;
 
-            SphereCollider _cameraWaterCheckSphere = _cameraWaterCheckObject.AddComponent<SphereCollider> ();
+            SphereCollider _cameraWaterCheckSphere = (SphereCollider)ShimAddComponent_RequireIt(_cameraWaterCheckObject.GetComponent<SphereCollider> ());
             _cameraWaterCheckSphere.radius = 0.1f;
             _cameraWaterCheckSphere.isTrigger = true;
 
-            Rigidbody _cameraWaterCheckRb = _cameraWaterCheckObject.AddComponent<Rigidbody> ();
+            Rigidbody _cameraWaterCheckRb = (Rigidbody)ShimAddComponent_RequireIt(_cameraWaterCheckObject.GetComponent<Rigidbody> ());
             _cameraWaterCheckRb.useGravity = false;
             _cameraWaterCheckRb.isKinematic = true;
 
-            _cameraWaterCheck = _cameraWaterCheckObject.AddComponent<CameraWaterCheck> ();
+            _cameraWaterCheck = (CameraWaterCheck)ShimAddComponent_RequireIt(_cameraWaterCheckObject.GetComponent<CameraWaterCheck> ());
 
             prevPosition = transform.position;
 
-            if (viewTransform == null)
-                viewTransform = Camera.main.transform;
+            ShimRequireNonNull(viewTransform);
+            // if (viewTransform == null)
+                // viewTransform = Camera.main.transform;
 
             if (playerRotationTransform == null && transform.childCount > 0)
                 playerRotationTransform = transform.GetChild (0);
@@ -147,9 +163,9 @@ namespace Fragsurf.Movement {
                 GameObject.Destroy (_collider);
 
             // rigidbody is required to collide with triggers
-            rb = gameObject.GetComponent<Rigidbody> ();
-            if (rb == null)
-                rb = gameObject.AddComponent<Rigidbody> ();
+            rb = (Rigidbody)ShimAddComponent_RequireIt(gameObject.GetComponent<Rigidbody> ());
+            // if (rb == null)
+                // rb = gameObject.AddComponent<Rigidbody> ();
 
             allowCrouch = crouchingEnabled;
 
@@ -165,7 +181,7 @@ namespace Fragsurf.Movement {
                 // Box collider
                 case ColliderType.Box:
 
-                _collider = _colliderObject.AddComponent<BoxCollider> ();
+                _collider = (BoxCollider)ShimAddComponent_RequireIt(_colliderObject.GetComponent<BoxCollider> ());
 
                 var boxc = (BoxCollider)_collider;
                 boxc.size = colliderSize;
@@ -177,7 +193,7 @@ namespace Fragsurf.Movement {
                 // Capsule collider
                 case ColliderType.Capsule:
 
-                _collider = _colliderObject.AddComponent<CapsuleCollider> ();
+                _collider = (CapsuleCollider)ShimAddComponent_RequireIt(_colliderObject.GetComponent<CapsuleCollider> ());
 
                 var capc = (CapsuleCollider)_collider;
                 capc.height = colliderSize.y;
@@ -212,6 +228,31 @@ namespace Fragsurf.Movement {
             _moveData.useStepOffset = useStepOffset;
             _moveData.stepOffset = stepOffset;
 
+        }
+
+        private Component ShimAddComponent_RequireIt(Component component)
+        {
+            if (component == null)
+            {
+                Debug.LogError("The component is missing");
+            }
+            return component;
+        }
+
+        private Transform ShimRequireNonNull(Transform other)
+        {
+            if (other == null)
+            {
+                Debug.LogError("The transform is missing");
+            }
+            return other;
+        }
+
+        private GameObject NewGameObject(string name)
+        {
+            var newGameObject = Instantiate(emptyGameObject);
+            newGameObject.name = name;
+            return newGameObject;
         }
 
         private void Update () {
@@ -379,25 +420,6 @@ namespace Fragsurf.Movement {
                 {
                     triggers[index] = triggers[triggersActualLength - 1];
                     triggersActualLength--;
-                }
-            }
-        }
-
-        private void ShimTriggersRemoveAll(Collider other)
-        {
-            // Naive implementation
-            var index = 0;
-            while (index < triggersActualLength)
-            {
-                var trigger = triggers[index];
-                if (trigger == other)
-                {
-                    triggers[index] = triggers[triggersActualLength - 1];
-                    triggersActualLength--;
-                }
-                else
-                {
-                    index++;
                 }
             }
         }

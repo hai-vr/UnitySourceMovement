@@ -34,14 +34,18 @@ public class PlayerAiming : UdonSharpBehaviour
 	private void Start()
 	{
 		// Lock the mouse
-		Cursor.lockState = CursorLockMode.Locked;
-		Cursor.visible   = false;
+		// Udon Shim it out
+		// Cursor.lockState = CursorLockMode.Locked;
+		// Cursor.visible   = false;
 	}
 
 	private void Update()
 	{
 		// Fix pausing
-		if (Mathf.Abs(Time.timeScale) <= 0)
+
+		// Udon Shim: Timescale is always 1
+		var timeScale = 1f; // Time.timeScale;
+		if (Mathf.Abs(timeScale) <= 0)
 			return;
 
 		DecayPunchAngle();

@@ -14,13 +14,13 @@ namespace Fragsurf.TraceUtil {
         /// <param name="layerMask"></param>
         /// <returns></returns>
         public static Trace TraceCollider (Trace trace, Collider collider, Vector3 origin, Vector3 end, int layerMask, float colliderScale = 1f) {
-
-            if (collider is BoxCollider) {
+            var colliderType = collider.GetType();
+            if (colliderType == typeof(BoxCollider)) {
 
                 // Box collider trace
                 return TraceBox (trace, origin, end, collider.bounds.extents, collider.contactOffset, layerMask, colliderScale);
 
-            } else if (collider is CapsuleCollider) {
+            } else if (colliderType == typeof(CapsuleCollider)) {
 
                 // Capsule collider trace
                 var capc = (CapsuleCollider)collider;
@@ -32,7 +32,7 @@ namespace Fragsurf.TraceUtil {
 
             }
 
-            UdonFragsurfShims.Shim_NotImplementedException("Trace missing for collider: " + collider.GetType ());
+            UdonFragsurfShims.Shim_NotImplementedException("Trace missing for collider: " + colliderType);
             return null;
         }
 

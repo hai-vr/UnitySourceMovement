@@ -9,7 +9,8 @@ namespace Fragsurf.Movement {
         /// <summary>
         /// Change this if your ground is on a different layer
         /// </summary>
-        public static int groundLayerMask = LayerMask.GetMask (new string[] { "Default", "Ground", "Player clip" }); //(1 << 0);
+        // public static int groundLayerMask = LayerMask.GetMask (new string[] { "Default", "Ground", "Player clip" }); //(1 << 0);
+        public static int groundLayerMask = (1 << 0); // Udon Shim
 
         private static Collider[] _colliders = new Collider [maxCollisions];
         private static Vector3[] _planes = new Vector3 [maxClipPlanes];
@@ -34,9 +35,10 @@ namespace Fragsurf.Movement {
 
             // manual collision resolving
             int numOverlaps = 0;
-            if (collider is CapsuleCollider) {
+            var colliderType = collider.GetType();
+            if (colliderType == typeof(CapsuleCollider)) {
 
-                var capc = collider as CapsuleCollider;
+                var capc = (CapsuleCollider)collider;
 
                 Vector3 point1, point2;
                 GetCapsulePoints (capc, origin, out point1, out point2);
@@ -44,7 +46,7 @@ namespace Fragsurf.Movement {
                 numOverlaps = Physics.OverlapCapsuleNonAlloc (point1, point2, capc.radius,
                     _colliders, groundLayerMask, QueryTriggerInteraction.Ignore);
 
-            } else if (collider is BoxCollider) {
+            } else if (colliderType == typeof(BoxCollider)) {
 
                 numOverlaps = Physics.OverlapBoxNonAlloc (origin, collider.bounds.extents, _colliders,
                     Quaternion.identity, groundLayerMask, QueryTriggerInteraction.Ignore);
@@ -62,7 +64,7 @@ namespace Fragsurf.Movement {
                     _colliders [i].transform.rotation, out direction, out distance)) {
                     
                     // Step offset
-                    if (stepOffset > 0f && surfer != null && surfer.moveData.useStepOffset)
+                    if (stepOffset > 0f && surfer != null && surfer.XGet_moveData().useStepOffset)
                         if (StepOffset (traceHolder, collider, _colliders [i], ref origin, ref velocity, rigidbodyPushForce, velocityMultiplier, stepOffset, direction, distance, forwardVelocity, surfer))
                             return;
 
@@ -95,14 +97,16 @@ namespace Fragsurf.Movement {
             if (forwardDirection.sqrMagnitude == 0f)
                 return false;
 
+            var moveData = surfer.XGet_moveData();
+
             // Trace ground
             Trace groundTrace = Tracer.TraceCollider (traceHolder, collider, origin, origin + Vector3.down * 0.1f, groundLayerMask);
-            if (groundTrace.hitCollider == null || Vector3.Angle (Vector3.up, groundTrace.planeNormal) > surfer.moveData.slopeLimit)
+            if (groundTrace.hitCollider == null || Vector3.Angle (Vector3.up, groundTrace.planeNormal) > moveData.slopeLimit)
                 return false;
 
             // Trace wall
             Trace wallTrace = Tracer.TraceCollider (traceHolder, collider, origin, origin + velocity, groundLayerMask, 0.9f);
-            if (wallTrace.hitCollider == null || Vector3.Angle (Vector3.up, wallTrace.planeNormal) <= surfer.moveData.slopeLimit)
+            if (wallTrace.hitCollider == null || Vector3.Angle (Vector3.up, wallTrace.planeNormal) <= moveData.slopeLimit)
                 return false;
 
             // Trace upwards (check for roof etc)
@@ -123,7 +127,7 @@ namespace Fragsurf.Movement {
             Trace forwardTrace = Tracer.TraceCollider (traceHolder, collider, upOrigin, upOrigin + forwardDirection * Mathf.Max (0.2f, forwardMagnitude), groundLayerMask);
             if (forwardTrace.hitCollider != null)
                 forwardDistance = forwardTrace.distance;
-            
+
             // Don't bother doing the rest if we can't move forward anyway
             if (forwardDistance <= 0f)
                 return false;
@@ -140,7 +144,7 @@ namespace Fragsurf.Movement {
             float verticalStep = Mathf.Clamp (upDistance - downDistance, 0f, stepOffset);
             float horizontalStep = forwardDistance;
             float stepAngle = Vector3.Angle (Vector3.forward, new Vector3 (0f, verticalStep, horizontalStep));
-            if (stepAngle > surfer.moveData.slopeLimit)
+            if (stepAngle > moveData.slopeLimit)
                 return false;
 
             // Get new position
