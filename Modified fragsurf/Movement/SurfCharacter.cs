@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using VRC.Udon;
+using VRC.Udon.Common;
 
 namespace Fragsurf.Movement {
 
@@ -16,8 +17,10 @@ namespace Fragsurf.Movement {
         // Udon Specific
         public GameObject emptyGameObject;
 
-        public MoveData _moveData; // = new MoveData ();
-        public SurfController _controller; // = new SurfController ();
+        public MoveData _moveData; // = new MoveData (); // Udon Shim new not supported
+        public SurfController _controller; // = new SurfController (); // Udon Shim new not supported
+        public GameObject _colliderObject; // Udon Shim add component not supported
+        public GameObject _cameraWaterCheckObject; // Udon Shim add component not supported
 
         ///// Fields /////
 
@@ -57,8 +60,6 @@ namespace Fragsurf.Movement {
         private Collider _collider;
         private Vector3 _angles;
         private Vector3 _startPosition;
-        private GameObject _colliderObject;
-        private GameObject _cameraWaterCheckObject;
         private CameraWaterCheck _cameraWaterCheck;
 
         private Rigidbody rb;
@@ -111,22 +112,28 @@ namespace Fragsurf.Movement {
 			Gizmos.DrawWireCube( transform.position, colliderSize );
 		}
 		
-        private void Awake () {
-            
-            _controller.playerTransform = playerRotationTransform;
-            
-            if (viewTransform != null) {
+        private void Awake ()
+        {
+            // DoAwake();
+        }
 
+        private bool _awoken;
+        private void DoAwake()
+        {
+            if (_awoken) return;
+
+            _controller.playerTransform = playerRotationTransform;
+
+            if (viewTransform != null)
+            {
                 _controller.camera = viewTransform;
                 _controller.cameraYPos = viewTransform.localPosition.y;
-
             }
-
         }
 
         private void Start () {
 
-            _colliderObject = NewGameObject ("PlayerCollider");
+            // _colliderObject = NewGameObject ("PlayerCollider");
             _colliderObject.layer = gameObject.layer;
             _colliderObject.transform.SetParent (transform);
             _colliderObject.transform.rotation = Quaternion.identity;
@@ -134,7 +141,7 @@ namespace Fragsurf.Movement {
             _colliderObject.transform.SetSiblingIndex (0);
 
             // Water check
-            _cameraWaterCheckObject = NewGameObject ("Camera water check");
+            // _cameraWaterCheckObject = NewGameObject ("Camera water check");
             _cameraWaterCheckObject.layer = gameObject.layer;
             _cameraWaterCheckObject.transform.position = viewTransform.position;
 
@@ -228,6 +235,7 @@ namespace Fragsurf.Movement {
             _moveData.useStepOffset = useStepOffset;
             _moveData.stepOffset = stepOffset;
 
+            DoAwake();
         }
 
         private Component ShimAddComponent_RequireIt(Component component)
@@ -302,24 +310,55 @@ namespace Fragsurf.Movement {
 
         }
 
-        private void UpdateMoveData () {
-            
-            _moveData.verticalAxis = Input.GetAxisRaw ("Vertical");
-            _moveData.horizontalAxis = Input.GetAxisRaw ("Horizontal");
+        private float _udonHorizontal;
+        private float _udonVertical;
+        private bool _udonJump;
+        private bool _udonJumpResettable;
+        private bool _udonCrouch = false;
+        private bool _udonSprint = true;
+        public override void InputMoveHorizontal(float value, UdonInputEventArgs args)
+        {
+            _udonHorizontal = value;
+        }
+        public override void InputMoveVertical(float value, UdonInputEventArgs args)
+        {
+            _udonVertical = value;
+        }
+        public override void InputJump(bool value, UdonInputEventArgs args)
+        {
+            _udonJump = value;
+            _udonJumpResettable = value;
+        }
 
-            _moveData.sprinting = Input.GetButton ("Sprint");
-            
-            if (Input.GetButtonDown ("Crouch"))
-                _moveData.crouching = true;
+        private void UpdateMoveData ()
+        {
 
-            if (!Input.GetButton ("Crouch"))
-                _moveData.crouching = false;
+            _udonHorizontal = Input.GetAxis("Horizontal");
+            _udonVertical = Input.GetAxis("Vertical");
+            // _moveData.verticalAxis = Input.GetAxisRaw ("Vertical");
+            // _moveData.horizontalAxis = Input.GetAxisRaw ("Horizontal");
+            _moveData.verticalAxis = _udonVertical;
+            _moveData.horizontalAxis = _udonHorizontal;
+
+            // _moveData.sprinting = Input.GetButton ("Sprint");
+            _moveData.sprinting = _udonSprint;
+
+            if (false) // Udon Stub: This looks tricky (ButtonDown vs Button)??? Keep this there until we figure this out
+            {
+                if (Input.GetButtonDown ("Crouch"))
+                    _moveData.crouching = true;
+
+                if (!Input.GetButton ("Crouch"))
+                    _moveData.crouching = false;
+            }
+            _moveData.crouching = _udonCrouch;
             
             bool moveLeft = _moveData.horizontalAxis < 0f;
             bool moveRight = _moveData.horizontalAxis > 0f;
             bool moveFwd = _moveData.verticalAxis > 0f;
             bool moveBack = _moveData.verticalAxis < 0f;
-            bool jump = Input.GetButton ("Jump");
+            // bool jump = Input.GetButton ("Jump");
+            bool jump = _udonJump;
 
             if (!moveLeft && !moveRight)
                 _moveData.sideMove = 0f;
@@ -334,13 +373,18 @@ namespace Fragsurf.Movement {
                 _moveData.forwardMove = moveConfig.acceleration;
             else if (moveBack)
                 _moveData.forwardMove = -moveConfig.acceleration;
-            
-            if (Input.GetButtonDown ("Jump"))
-                _moveData.wishJump = true;
 
-            if (!Input.GetButton ("Jump"))
-                _moveData.wishJump = false;
-            
+            if (false) // Udon Stub: This looks tricky (ButtonDown vs Button)??? Keep this there until we figure this out
+            {
+                if (Input.GetButtonDown("Jump"))
+                    _moveData.wishJump = true;
+
+                if (!Input.GetButton("Jump"))
+                    _moveData.wishJump = false;
+            }
+            _moveData.wishJump = _udonJumpResettable;
+            _udonJumpResettable = false;
+
             _moveData.viewAngles = _angles;
 
         }

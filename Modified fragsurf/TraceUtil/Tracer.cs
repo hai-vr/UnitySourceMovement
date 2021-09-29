@@ -99,14 +99,23 @@ namespace Fragsurf.TraceUtil {
             extents *= (1f - contactOffset);
 
             RaycastHit hit;
-            if (Physics.BoxCast (center: start,
-                halfExtents: extents * colliderScale,
-                direction: direction,
-                orientation: Quaternion.identity,
-                maxDistance: maxDistance,
-                hitInfo: out hit,
-                layerMask: layerMask,
-                queryTriggerInteraction: QueryTriggerInteraction.Ignore)) {
+            //if (Physics.BoxCast (center: start,
+            //    halfExtents: extents * colliderScale,
+            //    direction: direction,
+            //    orientation: Quaternion.identity,
+            //    maxDistance: maxDistance,
+            //    hitInfo: out hit,
+            //    layerMask: layerMask,
+            //    queryTriggerInteraction: QueryTriggerInteraction.Ignore)) {
+
+            if (Physics.BoxCast (start,
+                extents * colliderScale,
+                direction,
+                out hit,
+                Quaternion.identity,
+                maxDistance,
+                layerMask,
+                QueryTriggerInteraction.Ignore)) {
 
                 result.fraction = hit.distance / maxDistance;
                 result.hitCollider = hit.collider;

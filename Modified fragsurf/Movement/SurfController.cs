@@ -6,7 +6,8 @@ using UdonSharp;
 namespace Fragsurf.Movement {
     public class SurfController : UdonSharpBehaviour {
         // Udon Specific
-        private Trace traceHolder;
+        public Trace traceHolder;
+        public SurfPhysics surfPhysicsHolder;
 
         ///// Fields /////
 
@@ -94,7 +95,7 @@ namespace Fragsurf.Movement {
             if (surfer_moveData.velocity.sqrMagnitude == 0f) {
 
                 // Do collisions while standing still
-                SurfPhysics.ResolveCollisions (traceHolder, surfer_collider, ref surfer_moveData.origin, ref surfer_moveData.velocity, surfer_moveData.rigidbodyPushForce, 1f, surfer_moveData.stepOffset, _surfer);
+                surfPhysicsHolder.ResolveCollisions (traceHolder, surfer_collider, ref surfer_moveData.origin, ref surfer_moveData.velocity, surfer_moveData.rigidbodyPushForce, 1f, surfer_moveData.stepOffset, _surfer);
 
             } else {
 
@@ -112,7 +113,7 @@ namespace Fragsurf.Movement {
                     surfer_moveData.origin += velThisLoop;
 
                     // don't penetrate walls
-                    SurfPhysics.ResolveCollisions (traceHolder, surfer_collider, ref surfer_moveData.origin, ref surfer_moveData.velocity, surfer_moveData.rigidbodyPushForce, amountThisLoop / initialVel, surfer_moveData.stepOffset, _surfer);
+                    surfPhysicsHolder.ResolveCollisions (traceHolder, surfer_collider, ref surfer_moveData.origin, ref surfer_moveData.velocity, surfer_moveData.rigidbodyPushForce, amountThisLoop / initialVel, surfer_moveData.stepOffset, _surfer);
 
                 }
 
@@ -148,7 +149,7 @@ namespace Fragsurf.Movement {
                     surfer_moveData.velocity += AirInputMovement ();
 
                     // let the magic happen
-                    SurfPhysics.Reflect (traceHolder, ref surfer_moveData.velocity, _surfer.XGet_collider(), surfer_moveData.origin, _deltaTime);
+                    surfPhysicsHolder.Reflect (traceHolder, ref surfer_moveData.velocity, _surfer.XGet_collider(), surfer_moveData.origin, _deltaTime);
 
                 } else {
 
@@ -622,8 +623,10 @@ namespace Fragsurf.Movement {
             var down = surfer_moveData.origin;
             down.y -= 0.15f;
 
-            return Tracer.TraceCollider (traceHolder, _surfer.XGet_collider(), surfer_moveData.origin, down, SurfPhysics.groundLayerMask);
-
+            Debug.Log("Tracing to floor...");
+            var traceToFloor = Tracer.TraceCollider (traceHolder, _surfer.XGet_collider(), surfer_moveData.origin, down, SurfPhysics.groundLayerMask);
+            Debug.Log(_surfer.XGet_collider() + " " + surfer_moveData.origin + " " + down + " " + SurfPhysics.groundLayerMask);
+            return traceToFloor;
         }
 
         public void Crouch (ISurfControllable surfer, MovementConfig config, float deltaTime)

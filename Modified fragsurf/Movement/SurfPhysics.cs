@@ -10,10 +10,11 @@ namespace Fragsurf.Movement {
         /// Change this if your ground is on a different layer
         /// </summary>
         // public static int groundLayerMask = LayerMask.GetMask (new string[] { "Default", "Ground", "Player clip" }); //(1 << 0);
-        public static int groundLayerMask = (1 << 0); // Udon Shim
+        // public static int groundLayerMask = (1 << 0); // Udon Shim
+        public const int groundLayerMask = 1; // Udon Shim
 
-        private static Collider[] _colliders = new Collider [maxCollisions];
-        private static Vector3[] _planes = new Vector3 [maxClipPlanes];
+        private Collider[] _colliders = new Collider [maxCollisions];
+        private Vector3[] _planes = new Vector3 [maxClipPlanes];
         public const float HU2M = 52.4934383202f;
         private const int maxCollisions = 128;
         private const int maxClipPlanes = 5;
@@ -31,7 +32,7 @@ namespace Fragsurf.Movement {
         /// <param name="velocity"></param>
         /// http://www.00jknight.com/blog/unity-character-controller
         
-        public static void ResolveCollisions (Trace traceHolder, Collider collider, ref Vector3 origin, ref Vector3 velocity, float rigidbodyPushForce, float velocityMultiplier = 1f, float stepOffset = 0f, ISurfControllable surfer = null) {
+        public void ResolveCollisions (Trace traceHolder, Collider collider, ref Vector3 origin, ref Vector3 velocity, float rigidbodyPushForce, float velocityMultiplier = 1f, float stepOffset = 0f, ISurfControllable surfer = null) {
 
             // manual collision resolving
             int numOverlaps = 0;
@@ -213,7 +214,7 @@ namespace Fragsurf.Movement {
         /// <param name="firstDestination"></param>
         /// <param name="firstTrace"></param>
         /// <returns></returns>
-        public static int Reflect (Trace traceHolder, ref Vector3 velocity, Collider collider, Vector3 origin, float deltaTime) {
+        public int Reflect (Trace traceHolder, ref Vector3 velocity, Collider collider, Vector3 origin, float deltaTime) {
 
             float d;
             var newVelocity = Vector3.zero;

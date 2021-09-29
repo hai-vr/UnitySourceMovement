@@ -56,17 +56,16 @@ public class CameraWaterCheck : UdonSharpBehaviour {
         }
     }
 
-    public bool IsUnderwater () {
-        
-        foreach (Collider trigger in triggers) {
-
-            if (trigger.GetComponentInParent<Water> ())
+    public bool IsUnderwater ()
+    {
+        for (var index = 0; index < triggersActualLength; index++)
+        {
+            Collider trigger = triggers[index];
+            if (trigger.GetComponentInParent<Water>())
                 return true;
-
         }
 
         return false;
-
     }
 
 }
