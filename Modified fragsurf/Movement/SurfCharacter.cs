@@ -1,7 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine.Rendering;
 
 namespace Fragsurf.Movement {
 
@@ -260,20 +258,6 @@ namespace Fragsurf.Movement {
             prevPosition = transform.position;
 
             _colliderObject.transform.rotation = Quaternion.identity;
-
-        }
-        
-        private void UpdateTestBinds () {
-
-            if (Input.GetKeyDown (KeyCode.Backspace))
-                ResetPosition ();
-
-        }
-
-        private void ResetPosition () {
-            
-            moveData.velocity = Vector3.zero;
-            moveData.origin = _startPosition;
 
         }
 

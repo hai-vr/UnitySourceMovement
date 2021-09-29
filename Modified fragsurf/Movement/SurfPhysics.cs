@@ -161,36 +161,6 @@ namespace Fragsurf.Movement {
         /// <summary>
         /// 
         /// </summary>
-        public static void Friction (ref Vector3 velocity, float stopSpeed, float friction, float deltaTime) {
-
-            var speed = velocity.magnitude;
-
-            if (speed < 0.0001905f)
-                return;
-
-            var drop = 0f;
-
-            // apply ground friction
-            var control = (speed < stopSpeed) ? stopSpeed : speed;
-            drop += control * friction * deltaTime;
-
-            // scale the velocity
-            var newspeed = speed - drop;
-            if (newspeed < 0)
-                newspeed = 0;
-
-            if (newspeed != speed) {
-
-                newspeed /= speed;
-                velocity *= newspeed;
-
-            }
-
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="velocity"></param>
         /// <param name="wishdir"></param>
         /// <param name="wishspeed"></param>
@@ -227,42 +197,6 @@ namespace Fragsurf.Movement {
             for (int i = 0; i < 3; i++)
                 result [i] += accelspeed * wishdir [i];
 
-            return result;
-
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="wishdir"></param>
-        /// <param name="wishspeed"></param>
-        /// <param name="accel"></param>
-        /// <returns></returns>
-        public static Vector3 Accelerate (Vector3 currentVelocity, Vector3 wishdir, float wishspeed, float accel, float deltaTime, float surfaceFriction) {
-
-            // See if we are changing direction a bit
-            var currentspeed = Vector3.Dot (currentVelocity, wishdir);
-
-            // Reduce wishspeed by the amount of veer.
-            var addspeed = wishspeed - currentspeed;
-
-            // If not going to add any speed, done.
-            if (addspeed <= 0)
-                return Vector3.zero;
-
-            // Determine amount of accleration.
-            var accelspeed = accel * deltaTime * wishspeed * surfaceFriction;
-
-            // Cap at addspeed
-            if (accelspeed > addspeed)
-                accelspeed = addspeed;
-
-            var result = Vector3.zero;
-
-            // Adjust velocity.
-            for (int i = 0; i < 3; i++)
-                result [i] += accelspeed * wishdir [i];
-            
             return result;
 
         }
