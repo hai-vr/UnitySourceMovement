@@ -69,10 +69,7 @@ namespace Fragsurf.Movement {
 
                 // apply gravity
                 if (_surfer.XGet_groundObject() == null) {
-
-                    surfer_moveData.velocity.y -= (surfer_moveData.gravityFactor * _config.gravity * _deltaTime);
-                    surfer_moveData.velocity.y += _surfer.XGet_baseVelocity().y * _deltaTime;
-
+                    surfer_moveData.velocity = V3YAdd(surfer_moveData.velocity, _surfer.XGet_baseVelocity().y * _deltaTime - surfer_moveData.gravityFactor * _config.gravity * _deltaTime);
                 }
 
                 // input velocity, check for ground
@@ -87,10 +84,13 @@ namespace Fragsurf.Movement {
             }
 
             float yVel = surfer_moveData.velocity.y;
-            surfer_moveData.velocity.y = 0f;
-            surfer_moveData.velocity = Vector3.ClampMagnitude (surfer_moveData.velocity, _config.maxVelocity);
-            speed =  surfer_moveData.velocity.magnitude;
-            surfer_moveData.velocity.y = yVel;
+
+            var velXZ = surfer_moveData.velocity;
+            velXZ.y = 0f;
+            var clampXZ = Vector3.ClampMagnitude (velXZ, _config.maxVelocity);
+            surfer_moveData.velocity = clampXZ;
+            speed =  clampXZ.magnitude;
+            surfer_moveData.velocity = V3YAdd(clampXZ, yVel);
 
             if (surfer_moveData.velocity.sqrMagnitude == 0f) {
 
@@ -123,6 +123,12 @@ namespace Fragsurf.Movement {
 
             _surfer = null;
             
+        }
+
+        private Vector3 V3YAdd(Vector3 velocity, float add)
+        {
+            velocity.y += add;
+            return velocity;
         }
 
         /// <summary>
@@ -233,14 +239,13 @@ namespace Fragsurf.Movement {
                     Accelerate (_wishDir, _wishSpeed, accel * Mathf.Min (frictionMult, 1f), false);
 
                     float maxVelocityMagnitude = _config.maxVelocity;
-                    surfer_moveData.velocity = Vector3.ClampMagnitude (new Vector3 (surfer_moveData.velocity.x, 0f, surfer_moveData.velocity.z), maxVelocityMagnitude);
-                    surfer_moveData.velocity.y = yVel;
+                    surfer_moveData.velocity = V3YAdd(Vector3.ClampMagnitude (new Vector3 (surfer_moveData.velocity.x, 0f, surfer_moveData.velocity.z), maxVelocityMagnitude), yVel);
 
                     // Calculate how much slopes should affect movement
                     float yVelocityNew = forwardVelocity.normalized.y * new Vector3 (surfer_moveData.velocity.x, 0f, surfer_moveData.velocity.z).magnitude;
 
                     // Apply the Y-movement from slopes
-                    surfer_moveData.velocity.y = yVelocityNew * (_wishDir.y < 0f ? 1.2f : 1.0f);
+                    surfer_moveData.velocity = V3YAdd(surfer_moveData.velocity, yVelocityNew * (_wishDir.y < 0f ? 1.2f : 1.0f));
                     float removableYVelocity = surfer_moveData.velocity.y - yVelocityNew;
 
                 }
@@ -434,9 +439,14 @@ namespace Fragsurf.Movement {
             _accelerationSpeed = Mathf.Min (acceleration * _deltaTime * wishSpeed, _addSpeed);
 
             // Add the velocity.
-            surfer_moveData.velocity.x += _accelerationSpeed * wishDir.x;
-            if (yMovement) { surfer_moveData.velocity.y += _accelerationSpeed * wishDir.y; }
-            surfer_moveData.velocity.z += _accelerationSpeed * wishDir.z;
+            var original = surfer_moveData.velocity;
+            original.x += _accelerationSpeed * wishDir.x;
+            if (yMovement)
+            {
+                original.y += _accelerationSpeed * wishDir.y;
+            }
+            original.z += _accelerationSpeed * wishDir.z;
+            surfer_moveData.velocity = original;
 
         }
 
@@ -475,10 +485,11 @@ namespace Fragsurf.Movement {
                 _newSpeed /= _speed;
 
             // Set the end-velocity
-            surfer_moveData.velocity.x *= _newSpeed;
-            if (yAffected == true) { surfer_moveData.velocity.y *= _newSpeed; }
-            surfer_moveData.velocity.z *= _newSpeed;
-
+            var original = surfer_moveData.velocity;
+            original.x *= _newSpeed;
+            if (yAffected == true) { original.y *= _newSpeed; }
+            original.z *= _newSpeed;
+            surfer_moveData.velocity = original;
         }
 
         /// <summary>
@@ -545,7 +556,8 @@ namespace Fragsurf.Movement {
             if (!_config.autoBhop)
                 surfer_moveData.wishJump = false;
             
-            surfer_moveData.velocity.y += _config.jumpForce;
+            // surfer_moveData.velocity.y += _config.jumpForce;
+            surfer_moveData.velocity = V3YAdd(surfer_moveData.velocity, _config.jumpForce);
             jumping = true;
 
         }
@@ -593,7 +605,9 @@ namespace Fragsurf.Movement {
             if (obj != null) {
 
                 _surfer.XSet_groundObject(obj);
-                surfer_moveData.velocity.y = 0;
+                var original = surfer_moveData.velocity;
+                original.y = 0;
+                surfer_moveData.velocity = original;
 
             } else
                 _surfer.XSet_groundObject(null);
