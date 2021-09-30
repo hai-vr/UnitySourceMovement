@@ -351,6 +351,10 @@ namespace Fragsurf.Movement {
                 if (!Input.GetButton ("Crouch"))
                     _moveData.crouching = false;
             }
+
+            _udonCrouch = Input.GetMouseButton(1)
+                          || Input.GetAxisRaw("Oculus_CrossPlatform_PrimaryIndexTrigger") > 0.55f
+                          || Input.GetAxisRaw("Oculus_CrossPlatform_SecondaryIndexTrigger") > 0.55f;
             _moveData.crouching = _udonCrouch;
             
             bool moveLeft = _moveData.horizontalAxis < 0f;

@@ -1,5 +1,6 @@
 ﻿using UdonSharp;
 using UnityEngine;
+using VRC.SDKBase;
 
 public class PlayerAiming : UdonSharpBehaviour
 {
@@ -50,13 +51,8 @@ public class PlayerAiming : UdonSharpBehaviour
 
 		DecayPunchAngle();
 
-		// Input
-		float xMovement = Input.GetAxisRaw("Mouse X") * horizontalSensitivity * sensitivityMultiplier;
-		float yMovement = -Input.GetAxisRaw("Mouse Y") * verticalSensitivity  * sensitivityMultiplier;
-
-		// Calculate real rotation from input
-		realRotation   = new Vector3(Mathf.Clamp(realRotation.x + yMovement, minYRotation, maxYRotation), realRotation.y + xMovement, realRotation.z);
-		realRotation.z = Mathf.Lerp(realRotation.z, 0f, Time.deltaTime * 3f);
+		// HandleInput();
+		realRotation = Networking.LocalPlayer.GetRotation().eulerAngles;
 
 		//Apply real rotation to body
 		bodyTransform.eulerAngles = Vector3.Scale(realRotation, new Vector3(0f, 1f, 0f));
@@ -67,6 +63,27 @@ public class PlayerAiming : UdonSharpBehaviour
 		cameraEulerPunchApplied.y += punchAngle.y;
 
 		transform.eulerAngles = cameraEulerPunchApplied;
+		if (Vector3.Distance(Networking.LocalPlayer.GetPosition(), bodyTransform.position) > 10f)
+		{
+			bodyTransform.position = Networking.LocalPlayer.GetPosition() + Vector3.up;
+		}
+		else
+		{
+			var td = Networking.LocalPlayer.GetTrackingData(VRCPlayerApi.TrackingDataType.Origin);
+			var relPos = td.position - Networking.LocalPlayer.GetPosition();
+			Networking.LocalPlayer.TeleportTo(bodyTransform.position + Vector3.down + relPos, td.rotation, VRC_SceneDescriptor.SpawnOrientation.AlignRoomWithSpawnPoint);
+		}
+	}
+
+	private void HandleInput()
+	{
+		// Input
+		float xMovement = Input.GetAxisRaw("Mouse X") * horizontalSensitivity * sensitivityMultiplier;
+		float yMovement = -Input.GetAxisRaw("Mouse Y") * verticalSensitivity * sensitivityMultiplier;
+
+		// Calculate real rotation from input
+		realRotation = new Vector3(Mathf.Clamp(realRotation.x + yMovement, minYRotation, maxYRotation), realRotation.y + xMovement, realRotation.z);
+		realRotation.z = Mathf.Lerp(realRotation.z, 0f, Time.deltaTime * 3f);
 	}
 
 	public void ViewPunch(Vector2 punchAmount)
